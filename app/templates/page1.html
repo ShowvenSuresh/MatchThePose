@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>PoseMatcher</title>
+  <link rel="stylesheet" href="../static/styles/styles.css">
+</head>
+
+<body>
+  <!-- 背景音乐 -->
+  <audio id="bgMusic" loop>
+    <source src="../../assets/music/Wii.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <!-- 点击音效 -->
+  <audio id="clickSound">
+    <source src="../../assets/music/btn.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <!-- 音乐切换按钮 -->
+  <button id="musicToggle" class="music-btn">🎵 Play Music</button>
+
+  <!-- 页面主内容 -->
+  <div class="start-container">
+    <div class="Title">
+      <h1 class="title">Pose Matcher</h1>
+    </div>
+    <div class="strBtn">
+      <button id="startBtn">Start</button>
+    </div>
+  </div>
+
+  <!-- 脚本逻辑 -->
+  <script>
+    const bgMusic = document.getElementById("bgMusic");
+    const clickSound = document.getElementById("clickSound");
+    const startBtn = document.getElementById("startBtn");
+    const musicToggle = document.getElementById("musicToggle");
+
+    let isPlaying = false;
+
+    // 自动播放背景音乐（若失败，等待用户点击 Start）
+    window.addEventListener("DOMContentLoaded", () => {
+      bgMusic.play().then(() => {
+        isPlaying = true;
+        musicToggle.textContent = "⏸ Pause Music";
+      }).catch(err => {
+        console.warn("Autoplay might be blocked:", err);
+        startBtn.addEventListener("click", () => {
+          bgMusic.play();
+        }, {once: true});
+      });
+    });
+
+    musicToggle.addEventListener("click", () => {
+      if (isPlaying) {
+        bgMusic.pause();
+        musicToggle.textContent = "🎵 Play Music";
+      } else {
+        bgMusic.play();
+        musicToggle.textContent = "⏸ Pause Music";
+      }
+      isPlaying = !isPlaying;
+    });
+
+    startBtn.addEventListener("click", () => {
+      clickSound.currentTime = 0;
+      clickSound.play().then(() => {
+        setTimeout(() => {
+          window.location.href = "/game";
+        }, 700);
+      }).catch(() => {
+        window.location.href = "/game";
+      });
+    });
+  </script>
+</body>
+
+</html>

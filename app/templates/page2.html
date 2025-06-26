@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Pose Matcher - Game</title>
+  <link rel="stylesheet" href="../static/styles/page2.css">
+</head>
+
+<body>
+  <audio id="bgMusic" loop>
+    <source src="../../assets/music/Nintendo.MP3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <div id="countdown-overlay">
+    <div id="countdown-number">3</div>
+  </div>
+
+  <div class="main-container">
+    <div class="status-box">
+      <div class="status-item">⏱ Timer: <span id="timer">00:00</span></div>
+      <div class="status-item">💪 Score: <span id="score">0</span></div>
+    </div>
+
+    <div class="content-box">
+      <div class="left-panel">
+        <img id="poseImage" src="{{ url_for('static', filename='../assets/images/sample_pose.jpg') }}"
+          alt="Generated Pose">
+      </div>
+      <div class="right-panel">
+        <img id="video-stream" src="{{ url_for('video_feed') }}" width="640" height="480">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Countdown logic
+    const overlay = document.getElementById("countdown-overlay");
+    const countdownNumber = document.getElementById("countdown-number");
+    const mainUI = document.querySelector(".main-container");
+
+    let count = 3;
+    countdownNumber.textContent = count;
+
+    const countdownInterval = setInterval(() => {
+      count--;
+      if (count > -1) {
+        countdownNumber.textContent = count;
+      } else {
+        clearInterval(countdownInterval);
+        overlay.style.display = "none";
+        mainUI.style.display = "block";
+        startGame();
+      }
+    }, 1000);
+
+    // Start timer & webcam after countdown
+    function startGame() {
+      // Timer logic
+      let seconds = 0;
+      const timerEl = document.getElementById("timer");
+      setInterval(() => {
+        seconds++;
+        const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const secs = String(seconds % 60).padStart(2, '0');
+        timerEl.textContent = `${mins}:${secs}`;
+      }, 1000);
+
+      // Webcam logic
+      const video = document.getElementById('webcam');
+      navigator.mediaDevices.getUserMedia({video: true})
+        .then(stream => {
+          video.srcObject = stream;
+        })
+        .catch(error => {
+          console.error("Error accessing webcam:", error);
+          alert("Unable to access webcam.");
+        });
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      const music = document.getElementById("bgMusic");
+      music.play().catch(err => {
+        console.warn("Autoplay might be blocked until user interaction:", err);
+      });
+    });
+  </script>
+
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+
+</html>

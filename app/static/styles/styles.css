@@ -1,0 +1,53 @@
+body {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+  font-family: 'Poppins', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  color: white;
+}
+
+.start-container {
+  text-align: center;
+}
+
+.title {
+  font-size: 150px;
+  margin-bottom: 30px;
+  color: #ffd900;
+  letter-spacing: 2px;
+}
+
+#startBtn {
+  padding: 14px 36px;
+  font-size: 1.5em;
+  background: linear-gradient(to right, #FF416C, #FF4B2B);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(255, 65, 108, 0.4);
+  transition: all 0.25s ease-in-out;
+}
+
+#startBtn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 12px 25px rgba(255, 65, 108, 0.6);
+}
+
+.music-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  padding: 10px 15px;
+  background-color: #433232;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  color: white;
+}
