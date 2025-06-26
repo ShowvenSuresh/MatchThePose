@@ -1,0 +1,46 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# === Virtual Environment ===
+venv/
+env/
+ENV/
+.venv/
+.ENV/
+*.egg-info/
+pip-wheel-metadata/
+
+# === Jupyter Notebook Checkpoints (if using notebooks) ===
+.ipynb_checkpoints/
+
+# === OS Files ===
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# === Logs and temp files ===
+*.log
+*.tmp
+*.swp
+
+# === VS Code ===
+.vscode/
+
+# === PyCharm ===
+.idea/
+
+# === Flask-related files ===
+instance/
+*.sqlite3
+
+# === Node.js (in case of frontend deps) ===
+node_modules/
+dist/
+build/
