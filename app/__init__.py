@@ -12,3 +12,6 @@ def page1():
 @app.route('/game')
 def page2():
     return render_template('page2.html')
+
+
+
