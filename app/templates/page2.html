@@ -4,12 +4,12 @@
 <head>
   <meta charset="UTF-8">
   <title>Pose Matcher - Game</title>
-  <link rel="stylesheet" href="../static/styles/page2.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/page2.css') }}">
 </head>
 
 <body>
   <audio id="bgMusic" loop>
-    <source src="../../assets/music/Nintendo.MP3" type="audio/mpeg">
+    <source src="{{ url_for('static', filename='music/Nintendo.MP3') }}" type="audio/mpeg">
     Your browser does not support the audio element.
   </audio>
 
