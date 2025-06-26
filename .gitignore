@@ -44,3 +44,10 @@ instance/
 node_modules/
 dist/
 build/
+
+
+instance/
+
+.pytest_cache/
+.coverage
+htmlcov/
