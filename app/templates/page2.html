@@ -46,7 +46,8 @@
       countdownTime: 5,
       isGameActive: false,
       gameInterval: null,
-      checkInterval: null
+      checkInterval: null,
+      currentPoseCorrect: false
     };
 
     // DOM Elements
@@ -124,6 +125,7 @@
     function startRound() {
       gameState.isGameActive = true;
       gameState.countdownTime = 5;
+      gameState.currentPoseCorrect = false;
       
       // Update timer display
       timerElement.textContent = gameState.countdownTime;
@@ -155,20 +157,16 @@
           return;
         }
         
-        // Update status message to show detected pose
-        statusMessageElement.textContent = `Round ${gameState.currentRound}/10 - Detected: ${data.predicted_pose}`;
-        statusMessageElement.style.color = 'white';
+        // Update the current pose status
+        gameState.currentPoseCorrect = data.correct;
         
+        // Update status message to show detected pose
         if (data.correct) {
-          // Pose matched! End round early and add score
-          gameState.score = data.score;
-          scoreElement.textContent = gameState.score;
-          
-          // Show success feedback in status box
+          statusMessageElement.textContent = `Round ${gameState.currentRound}/10 - Perfect! You're matching the pose!`;
           statusMessageElement.style.color = '#4CAF50';
-          statusMessageElement.textContent = '✅ Perfect Match! +5 Points';
-          
-          endRound(true);
+        } else {
+          statusMessageElement.textContent = `Round ${gameState.currentRound}/10 - Detected: ${data.predicted_pose}`;
+          statusMessageElement.style.color = 'white';
         }
         
       } catch (error) {
@@ -188,10 +186,36 @@
         clearInterval(gameState.checkInterval);
       }
       
-      if (!wasCorrect) {
+      // Check if user had the correct pose when timer ran out
+      if (gameState.currentPoseCorrect) {
+        // Award points for having the correct pose at the end
+        try {
+          const response = await fetch('/add_score', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ points: 5 })
+          });
+          const data = await response.json();
+          gameState.score = data.score;
+          scoreElement.textContent = gameState.score;
+        } catch (error) {
+          console.error('Error updating score:', error);
+          // Fallback: update score locally
+          gameState.score += 5;
+          scoreElement.textContent = gameState.score;
+        }
+        
+        statusMessageElement.style.color = '#4CAF50';
+        statusMessageElement.textContent = '✅ Perfect timing! You had the right pose! +5 Points';
+      } else {
         statusMessageElement.style.color = '#FF6B6B';
-        statusMessageElement.textContent = '⏰ Time\'s up! Try the next pose';
+        statusMessageElement.textContent = '⏰ Time\'s up! You need to have the correct pose when time runs out!';
       }
+      
+      // Reset pose state
+      gameState.currentPoseCorrect = false;
       
       // Wait a moment to show result
       setTimeout(async () => {
@@ -203,7 +227,7 @@
         const data = await response.json();
         
         if (data.game_over) {
-          endGame(data.final_score);
+          endGame(data.final_score || gameState.score);
         } else {
           // Load next pose and start next round
           await loadCurrentPose();
@@ -243,6 +267,8 @@
         if (gameState.checkInterval) {
           clearInterval(gameState.checkInterval);
         }
+        // Reset pose state when tab is hidden
+        gameState.currentPoseCorrect = false;
       } else {
         // Resume game when tab becomes visible
         if (gameState.isGameActive) {

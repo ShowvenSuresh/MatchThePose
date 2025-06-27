@@ -93,14 +93,27 @@ def check_pose():
     
     is_correct = predicted_normalized == expected_normalized
     
-    if is_correct:
-        session['score'] = session.get('score', 0) + 5
+    # Don't automatically add score here anymore - let frontend handle it
     
     return jsonify({
         'correct': is_correct,
         'predicted_pose': current_prediction,
         'expected_pose': expected_pose,
         'score': session.get('score', 0)
+    })
+
+@app.route('/add_score', methods=['POST'])
+def add_score():
+    data = request.get_json()
+    points = data.get('points', 0)
+    
+    current_score = session.get('score', 0)
+    session['score'] = current_score + points
+    
+    return jsonify({
+        'success': True,
+        'score': session['score'],
+        'points_added': points
     })
 
 @app.route('/next_pose')
