@@ -22,6 +22,15 @@
   <!-- 音乐切换按钮 -->
   <button id="musicToggle" class="music-btn">🎵 Play Music</button>
 
+  <!-- Game Over Modal -->
+  <div id="gameOverModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h2>Game Over!</h2>
+      <p>Your Final Score: <span id="finalScore">0</span></p>
+      <button id="okButton" onclick="closeGameOverModal()">OK</button>
+    </div>
+  </div>
+
   <!-- 页面主内容 -->
   <div class="start-container">
     <div class="Title">
@@ -38,11 +47,37 @@
     const clickSound = document.getElementById("clickSound");
     const startBtn = document.getElementById("startBtn");
     const musicToggle = document.getElementById("musicToggle");
+    const gameOverModal = document.getElementById("gameOverModal");
+    const finalScoreElement = document.getElementById("finalScore");
 
     let isPlaying = false;
 
+    // Check for game completion parameters in URL
+    function checkGameCompletion() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const gameCompleted = urlParams.get('gameCompleted');
+      const finalScore = urlParams.get('finalScore');
+      
+      if (gameCompleted === 'true' && finalScore !== null) {
+        // Show game over modal with final score
+        finalScoreElement.textContent = finalScore;
+        gameOverModal.style.display = 'block';
+        
+        // Clean up URL parameters
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    }
+
+    // Close game over modal
+    function closeGameOverModal() {
+      gameOverModal.style.display = 'none';
+    }
+
     // 自动播放背景音乐（若失败，等待用户点击 Start）
     window.addEventListener("DOMContentLoaded", () => {
+      // Check if game was completed
+      checkGameCompletion();
+      
       bgMusic.play().then(() => {
         isPlaying = true;
         musicToggle.textContent = "⏸ Pause Music";
