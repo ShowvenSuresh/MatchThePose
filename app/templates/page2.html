@@ -41,7 +41,6 @@
       </div>
       <div class="right-panel">
         <img id="video-stream" src="{{ url_for('video_feed') }}" width="640" height="500">
-        <div id="detectedPose" class="detected-pose" style="margin-top: 10px; text-align: center; font-weight: bold; color: #333;">Detecting pose...</div>
       </div>
     </div>
   </div>
@@ -66,7 +65,6 @@
     const timerElement = document.getElementById("timer");
     const poseImageElement = document.getElementById("poseImage");
     const statusMessageElement = document.getElementById("statusMessage");
-    const detectedPoseElement = document.getElementById("detectedPose");
     const gameOverModal = document.getElementById("gameOverModal");
     const finalScoreElement = document.getElementById("finalScore");
 
@@ -167,8 +165,9 @@
           return;
         }
         
-        // Update detected pose display
-        detectedPoseElement.textContent = `Detected: ${data.predicted_pose}`;
+        // Update status message to show detected pose
+        statusMessageElement.textContent = `Round ${gameState.currentRound}/10 - Detected: ${data.predicted_pose}`;
+        statusMessageElement.style.color = 'white';
         
         if (data.correct) {
           // Pose matched! End round early and add score
@@ -206,10 +205,6 @@
       
       // Wait a moment to show result
       setTimeout(async () => {
-        // Reset detected pose styling
-        detectedPoseElement.style.color = '#333';
-        detectedPoseElement.textContent = 'Detecting pose...';
-        
         // Reset status message
         statusMessageElement.style.color = 'white';
         
