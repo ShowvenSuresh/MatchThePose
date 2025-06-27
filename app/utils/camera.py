@@ -58,17 +58,70 @@ class VideoCamera:
             )
 
             # Step 4: Use the original landmarks for pose matching
-            result = self.matcher.predict(results.pose_landmarks)
+            result, confidence = self.matcher.predict_with_confidence(results.pose_landmarks)
             self.last_prediction = result
 
-            cv2.putText(frame, f"Pose: {result}", (10, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            # Step 5: Draw detection box around the user
+            self._draw_detection_box(frame, results.pose_landmarks, result, confidence)
         else:
             self.last_prediction = "No pose detected"
-            cv2.putText(frame, "No Pose Detected", (10, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            # Draw a basic detection box even when no pose is detected
+            h, w = frame.shape[:2]
+            cv2.rectangle(frame, (50, 50), (w-50, h-50), (0, 0, 255), 2)
+            cv2.putText(frame, "No Pose Detected", (60, 40),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
         # Resize and encode
         frame = imutils.resize(frame, width=400)
         _, jpeg = cv2.imencode('.jpg', frame)
         return jpeg.tobytes()
+    
+    def _draw_detection_box(self, frame, pose_landmarks, pose_result, confidence):
+        """
+        Draw a detection box around the user with pose information and similarity percentage
+        """
+        h, w = frame.shape[:2]
+        
+        # Calculate bounding box from pose landmarks
+        x_coords = [lm.x * w for lm in pose_landmarks.landmark]
+        y_coords = [lm.y * h for lm in pose_landmarks.landmark]
+        
+        # Add padding to the bounding box
+        padding = 30
+        x_min = max(0, int(min(x_coords)) - padding)
+        x_max = min(w, int(max(x_coords)) + padding)
+        y_min = max(0, int(min(y_coords)) - padding)
+        y_max = min(h, int(max(y_coords)) + padding)
+        
+        # Set a single color for the detection box
+        box_color = (0, 255, 0)  # Green color for all detection boxes
+        
+        """
+        # Choose box color based on confidence level
+        if confidence >= 80:
+            box_color = (0, 255, 0)  # Green for high confidence
+        elif confidence >= 60:
+            box_color = (0, 255, 255)  # Yellow for medium confidence
+        else:
+            box_color = (0, 0, 255)  # Red for low confidence
+        """
+        
+        # Draw the detection box
+        cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), box_color, 2)
+        
+        # Prepare text for display - combine pose and similarity on same line
+        combined_text = f"Pose: {pose_result} | {confidence:.1f}%"
+        
+        # Draw background rectangles for text
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 0.6
+        thickness = 2
+        
+        # Get text size for background rectangle
+        (text_w, text_h), _ = cv2.getTextSize(combined_text, font, font_scale, thickness)
+        
+        # Draw background rectangle at the top
+        cv2.rectangle(frame, (x_min, y_min - text_h - 10), (x_min + text_w + 10, y_min), (0, 0, 0), -1)
+        
+        # Draw combined text at the top
+        cv2.putText(frame, combined_text, (x_min + 5, y_min - 5), font, font_scale, box_color, thickness)
