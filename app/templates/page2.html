@@ -13,15 +13,7 @@
     Your browser does not support the audio element.
   </audio>
 
-  <!-- Game Over Modal -->
-  <div id="gameOverModal" class="modal" style="display: none;">
-    <div class="modal-content">
-      <h2>Game Over!</h2>
-      <p>Your Final Score: <span id="finalScore">0</span></p>
-      <p>You completed all 10 poses!</p>
-      <button id="okButton" onclick="goBackToMenu()">OK</button>
-    </div>
-  </div>
+
 
   <div id="countdown-overlay">
     <div id="countdown-number">3</div>
@@ -65,8 +57,6 @@
     const timerElement = document.getElementById("timer");
     const poseImageElement = document.getElementById("poseImage");
     const statusMessageElement = document.getElementById("statusMessage");
-    const gameOverModal = document.getElementById("gameOverModal");
-    const finalScoreElement = document.getElementById("finalScore");
 
     // Initial countdown (3, 2, 1, GO!)
     let count = 3;
@@ -222,7 +212,7 @@
       }, 2000);
     }
 
-    // End game and show results
+    // End game and redirect to page 1 with score
     function endGame(finalScore) {
       gameState.isGameActive = false;
       
@@ -234,9 +224,8 @@
         clearInterval(gameState.checkInterval);
       }
       
-      // Show game over modal
-      finalScoreElement.textContent = finalScore;
-      gameOverModal.style.display = 'block';
+      // Redirect to page 1 with score data
+      window.location.href = `/?gameCompleted=true&finalScore=${finalScore}`;
     }
 
     // Go back to main menu
