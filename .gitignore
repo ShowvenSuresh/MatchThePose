@@ -39,7 +39,6 @@ Desktop.ini
 # === Flask-related files ===
 instance/
 *.sqlite3
-requirements.txt 
 # === Node.js (in case of frontend deps) ===
 node_modules/
 dist/
