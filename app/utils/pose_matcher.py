@@ -1,9 +1,14 @@
 import numpy as np
 import joblib 
+import pandas as pd
+import warnings
 
 class PoseMatcher:
     def __init__(self, model_path):
-        self.model = joblib.load(model_path) 
+        self.model = joblib.load(model_path)
+        
+        # Suppress the specific sklearn feature names warning
+        warnings.filterwarnings("ignore", message="X does not have valid feature names")
 
     def extract_landmarks(self, pose_landmarks):
         """
@@ -16,7 +21,15 @@ class PoseMatcher:
         for lm in pose_landmarks.landmark:
             landmarks.extend([lm.x, lm.y, lm.z, lm.visibility])
         
-        return np.array(landmarks).reshape(1, -1)  
+        # Create feature names to match training data (simple numeric names)
+        num_features = len(landmarks)
+        feature_names = [str(i) for i in range(num_features)]
+        
+        # Convert to DataFrame with feature names
+        features_array = np.array(landmarks).reshape(1, -1)
+        features_df = pd.DataFrame(features_array, columns=feature_names)
+        
+        return features_df  
 
     def predict(self, pose_landmarks):
         features = self.extract_landmarks(pose_landmarks)
