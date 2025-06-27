@@ -1,5 +1,5 @@
 import os 
-from flask import Flask, app, render_template
+from flask import Flask, app, render_template, Response
 from app.utils.camera import VideoCamera
 
 
