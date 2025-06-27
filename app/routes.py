@@ -32,10 +32,32 @@ def game():
     poses_dir = os.path.join(app.static_folder, 'poses')
     pose_classes = [d for d in os.listdir(poses_dir) if os.path.isdir(os.path.join(poses_dir, d))]
     
-    # Generate random sequence of 10 poses (can repeat)
+    # Generate random sequence of 10 poses (no consecutive duplicates, max 2 per pose)
     pose_sequence = []
+    last_pose_class = None
+    pose_usage_count = {}  # Track how many times each pose has been used
+    max_usage_per_pose = 2
+    
     for _ in range(10):
-        pose_class = random.choice(pose_classes)
+        # Get available pose classes (excluding the last one and those at max usage)
+        available_poses = []
+        for pose in pose_classes:
+            # Skip if it's the same as last pose (no consecutive duplicates)
+            if pose == last_pose_class:
+                continue
+            # Skip if this pose has already been used max times
+            if pose_usage_count.get(pose, 0) >= max_usage_per_pose:
+                continue
+            available_poses.append(pose)
+        
+        # If no poses are available (shouldn't happen with 10 rounds and max 2 usage), 
+        # allow any pose except the last one
+        if not available_poses:
+            available_poses = [pose for pose in pose_classes if pose != last_pose_class]
+        
+        # Select random pose from available ones
+        pose_class = random.choice(available_poses)
+        
         # Get random image from this pose class
         pose_images_dir = os.path.join(poses_dir, pose_class)
         images = [f for f in os.listdir(pose_images_dir) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
@@ -45,6 +67,9 @@ def game():
                 'class': pose_class,
                 'image': f'poses/{pose_class}/{image}'
             })
+            # Update tracking
+            last_pose_class = pose_class
+            pose_usage_count[pose_class] = pose_usage_count.get(pose_class, 0) + 1
     
     session['pose_sequence'] = pose_sequence
     session['current_pose_index'] = 0
