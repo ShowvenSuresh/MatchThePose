@@ -14,6 +14,7 @@ class VideoCamera:
         self.mp_drawing = mp.solutions.drawing_utils
 
         self.matcher = PoseMatcher("app/model/pose_classifier.pkl")
+        self.last_prediction = "No pose detected"
 
     def __del__(self):
         self.video.release()
@@ -58,10 +59,12 @@ class VideoCamera:
 
             # Step 4: Use the original landmarks for pose matching
             result = self.matcher.predict(results.pose_landmarks)
+            self.last_prediction = result
 
             cv2.putText(frame, f"Pose: {result}", (10, 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
         else:
+            self.last_prediction = "No pose detected"
             cv2.putText(frame, "No Pose Detected", (10, 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 

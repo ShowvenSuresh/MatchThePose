@@ -13,6 +13,16 @@
     Your browser does not support the audio element.
   </audio>
 
+  <!-- Game Over Modal -->
+  <div id="gameOverModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h2>Game Over!</h2>
+      <p>Your Final Score: <span id="finalScore">0</span></p>
+      <p>You completed all 10 poses!</p>
+      <button id="okButton" onclick="goBackToMenu()">OK</button>
+    </div>
+  </div>
+
   <div id="countdown-overlay">
     <div id="countdown-number">3</div>
   </div>
@@ -20,6 +30,7 @@
   <div class="main-container">
     <div class="status-box">
       <div class="status-item">⏱ Timer: <span id="timer">5</span></div>
+      <div id="statusMessage" class="status-message-center">Ready to play!</div>
       <div class="status-item">💪 Score: <span id="score">0</span></div>
     </div>
 
@@ -30,48 +41,242 @@
       </div>
       <div class="right-panel">
         <img id="video-stream" src="{{ url_for('video_feed') }}" width="640" height="500">
+        <div id="detectedPose" class="detected-pose" style="margin-top: 10px; text-align: center; font-weight: bold; color: #333;">Detecting pose...</div>
       </div>
     </div>
   </div>
 
   <script>
-    // Countdown logic
+    // Game state variables
+    let gameState = {
+      score: 0,
+      currentRound: 1,
+      totalRounds: 10,
+      countdownTime: 5,
+      isGameActive: false,
+      gameInterval: null,
+      checkInterval: null
+    };
+
+    // DOM Elements
     const overlay = document.getElementById("countdown-overlay");
     const countdownNumber = document.getElementById("countdown-number");
     const mainUI = document.querySelector(".main-container");
+    const scoreElement = document.getElementById("score");
+    const timerElement = document.getElementById("timer");
+    const poseImageElement = document.getElementById("poseImage");
+    const statusMessageElement = document.getElementById("statusMessage");
+    const detectedPoseElement = document.getElementById("detectedPose");
+    const gameOverModal = document.getElementById("gameOverModal");
+    const finalScoreElement = document.getElementById("finalScore");
 
+    // Initial countdown (3, 2, 1, GO!)
     let count = 3;
     countdownNumber.textContent = count;
 
     const countdownInterval = setInterval(() => {
       count--;
-      if (count > -1) {
+      if (count > 0) {
         countdownNumber.textContent = count;
+      } else if (count === 0) {
+        countdownNumber.textContent = "GO!";
       } else {
         clearInterval(countdownInterval);
         overlay.style.display = "none";
         mainUI.style.display = "block";
-        startGame();
+        initGame();
       }
     }, 1000);
 
-    // Start timer & webcam after countdown
-    function startGame() {
-      const timerEl = document.getElementById("timer");
-      let countdown = 5;
-
-      timerEl.textContent = countdown;
-
-      setInterval(() => {
-        countdown--;
-        if (countdown < 0) {
-          countdown = 5; // reset to 5 and start again
-        }
-        timerEl.textContent = countdown;
-      }, 1000);
+    // Initialize game
+    async function initGame() {
+      try {
+        // Load first pose
+        await loadCurrentPose();
+        
+        // Start the game loop
+        startRound();
+        
+      } catch (error) {
+        console.error('Error initializing game:', error);
+        alert('Error starting game!');
+      }
     }
 
+    // Load current pose from server
+    async function loadCurrentPose() {
+      try {
+        const response = await fetch('/get_current_pose');
+        const data = await response.json();
+        
+        if (data.game_over) {
+          endGame(data.final_score);
+          return;
+        }
+        
+        // Update UI with new pose
+        poseImageElement.src = `/static/${data.image_path}`;
+        gameState.score = data.score;
+        gameState.currentRound = data.round;
+        
+        // Update score display
+        scoreElement.textContent = gameState.score;
+        
+        // Reset status message
+        statusMessageElement.textContent = `Round ${gameState.currentRound}/10 - Match the pose!`;
+        statusMessageElement.style.color = 'white';
+        
+      } catch (error) {
+        console.error('Error loading pose:', error);
+        alert('Error loading pose!');
+      }
+    }
 
+    // Start a new round
+    function startRound() {
+      gameState.isGameActive = true;
+      gameState.countdownTime = 5;
+      
+      // Update timer display
+      timerElement.textContent = gameState.countdownTime;
+      
+      // Start countdown timer
+      gameState.gameInterval = setInterval(() => {
+        gameState.countdownTime--;
+        timerElement.textContent = gameState.countdownTime;
+        
+        if (gameState.countdownTime <= 0) {
+          endRound();
+        }
+      }, 1000);
+
+      // Start checking pose matches
+      gameState.checkInterval = setInterval(checkPoseMatch, 500);
+    }
+
+    // Check if current pose matches target
+    async function checkPoseMatch() {
+      if (!gameState.isGameActive) return;
+      
+      try {
+        const response = await fetch('/check_pose');
+        const data = await response.json();
+        
+        if (data.error) {
+          console.error('Error checking pose:', data.error);
+          return;
+        }
+        
+        // Update detected pose display
+        detectedPoseElement.textContent = `Detected: ${data.predicted_pose}`;
+        
+        if (data.correct) {
+          // Pose matched! End round early and add score
+          gameState.score = data.score;
+          scoreElement.textContent = gameState.score;
+          
+          // Show success feedback in status box
+          statusMessageElement.style.color = '#4CAF50';
+          statusMessageElement.textContent = '✅ Perfect Match! +5 Points';
+          
+          endRound(true);
+        }
+        
+      } catch (error) {
+        console.error('Error checking pose:', error);
+      }
+    }
+
+    // End current round
+    async function endRound(wasCorrect = false) {
+      gameState.isGameActive = false;
+      
+      // Clear intervals
+      if (gameState.gameInterval) {
+        clearInterval(gameState.gameInterval);
+      }
+      if (gameState.checkInterval) {
+        clearInterval(gameState.checkInterval);
+      }
+      
+      if (!wasCorrect) {
+        statusMessageElement.style.color = '#FF6B6B';
+        statusMessageElement.textContent = '⏰ Time\'s up! Try the next pose';
+      }
+      
+      // Wait a moment to show result
+      setTimeout(async () => {
+        // Reset detected pose styling
+        detectedPoseElement.style.color = '#333';
+        detectedPoseElement.textContent = 'Detecting pose...';
+        
+        // Reset status message
+        statusMessageElement.style.color = 'white';
+        
+        // Move to next pose
+        const response = await fetch('/next_pose');
+        const data = await response.json();
+        
+        if (data.game_over) {
+          endGame(data.final_score);
+        } else {
+          // Load next pose and start next round
+          await loadCurrentPose();
+          startRound();
+        }
+      }, 2000);
+    }
+
+    // End game and show results
+    function endGame(finalScore) {
+      gameState.isGameActive = false;
+      
+      // Clear any running intervals
+      if (gameState.gameInterval) {
+        clearInterval(gameState.gameInterval);
+      }
+      if (gameState.checkInterval) {
+        clearInterval(gameState.checkInterval);
+      }
+      
+      // Show game over modal
+      finalScoreElement.textContent = finalScore;
+      gameOverModal.style.display = 'block';
+    }
+
+    // Go back to main menu
+    function goBackToMenu() {
+      window.location.href = '/';
+    }
+
+    // Handle page visibility changes
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        // Pause game when tab is not visible
+        if (gameState.gameInterval) {
+          clearInterval(gameState.gameInterval);
+        }
+        if (gameState.checkInterval) {
+          clearInterval(gameState.checkInterval);
+        }
+      } else {
+        // Resume game when tab becomes visible
+        if (gameState.isGameActive) {
+          gameState.gameInterval = setInterval(() => {
+            gameState.countdownTime--;
+            timerElement.textContent = gameState.countdownTime;
+            
+            if (gameState.countdownTime <= 0) {
+              endRound();
+            }
+          }, 1000);
+
+          gameState.checkInterval = setInterval(checkPoseMatch, 500);
+        }
+      }
+    });
+
+    // Start background music
     window.addEventListener("DOMContentLoaded", () => {
       const music = document.getElementById("bgMusic");
       music.play().catch(err => {
