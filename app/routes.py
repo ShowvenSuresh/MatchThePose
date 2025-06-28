@@ -107,10 +107,14 @@ def check_pose():
     if current_index >= len(pose_sequence):
         return jsonify({'game_over': True, 'final_score': session.get('score', 0)})
     
-    # Get the current pose prediction from camera
+    # Get the current pose prediction with confidence from camera
     camera = get_camera()
-    current_prediction = getattr(camera, 'last_prediction', 'No pose detected')
     expected_pose = pose_sequence[current_index]['class']
+    
+    # Use the last prediction and confidence from the video feed
+    # to avoid conflicts with the ongoing camera stream
+    current_prediction = getattr(camera, 'last_prediction', 'No pose detected')
+    confidence = getattr(camera, 'last_confidence', 0.0)
     
     # Check if poses match (normalize names for comparison)
     predicted_normalized = current_prediction.replace('_', ' ').replace('-', ' ').lower().strip()
@@ -118,12 +122,26 @@ def check_pose():
     
     is_correct = predicted_normalized == expected_normalized
     
-    # Don't automatically add score here anymore - let frontend handle it
+    # Calculate score based on confidence percentage (only if pose is correct)
+    score_to_add = 0
+    if is_correct and confidence > 0:
+        if confidence < 50:
+            score_to_add = 1
+        elif confidence < 60:
+            score_to_add = 2
+        elif confidence < 70:
+            score_to_add = 3
+        elif confidence < 80:
+            score_to_add = 4
+        else:  # confidence >= 80
+            score_to_add = 5
     
     return jsonify({
         'correct': is_correct,
         'predicted_pose': current_prediction,
         'expected_pose': expected_pose,
+        'confidence': confidence,
+        'score_to_add': score_to_add,
         'score': session.get('score', 0)
     })
 
@@ -167,8 +185,16 @@ def video_feed():
 @app.route('/get_pose_prediction')
 def get_pose_prediction():
     camera = get_camera()
+    
+    # Use the last prediction and confidence from the video feed
+    # to avoid conflicts with the ongoing camera stream
     prediction = getattr(camera, 'last_prediction', 'No pose detected')
-    return jsonify({'prediction': prediction})
+    confidence = getattr(camera, 'last_confidence', 0.0)
+    
+    return jsonify({
+        'prediction': prediction,
+        'confidence': confidence
+    })
 
 if __name__ == '__main__':
     app.run(debug=True)

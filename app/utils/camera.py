@@ -15,6 +15,7 @@ class VideoCamera:
 
         self.matcher = PoseMatcher("app/model/pose_classifier.pkl")
         self.last_prediction = "No pose detected"
+        self.last_confidence = 0.0
 
     def __del__(self):
         self.video.release()
@@ -60,11 +61,13 @@ class VideoCamera:
             # Step 4: Use the original landmarks for pose matching
             result, confidence = self.matcher.predict_with_confidence(results.pose_landmarks)
             self.last_prediction = result
+            self.last_confidence = confidence
 
             # Step 5: Draw detection box around the user
             self._draw_detection_box(frame, results.pose_landmarks, result, confidence)
         else:
             self.last_prediction = "No pose detected"
+            self.last_confidence = 0.0
             # Draw a basic detection box even when no pose is detected
             h, w = frame.shape[:2]
             cv2.rectangle(frame, (50, 50), (w-50, h-50), (0, 0, 255), 2)

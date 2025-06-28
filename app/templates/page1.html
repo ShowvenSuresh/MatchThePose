@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-  <title>PoseMatcher</title>
+  <title>Match The Pose</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles/styles.css') }}">
 </head>
 
@@ -22,6 +22,9 @@
   <!-- 音乐切换按钮 -->
   <button id="musicToggle" class="music-btn">🎵 Play Music</button>
 
+  <!-- 帮助按钮 -->
+  <button id="helpButton" class="help-btn">?</button>
+
   <!-- Game Over Modal -->
   <div id="gameOverModal" class="modal" style="display: none;">
     <div class="modal-content">
@@ -31,10 +34,33 @@
     </div>
   </div>
 
+  <!-- Help Modal -->
+  <div id="helpModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h2>How to Play</h2>
+      <div class="help-content">
+        <h3>Game Instructions:</h3>
+        <p>• Match the pose shown on the left side using your camera</p>
+        <p>• Hold the correct pose when the timer reaches 0</p>
+        <p>• Complete 10 rounds to finish the game</p>
+        
+        <h3>Scoring System:</h3>
+        <p>• &lt; 50% confidence: 1 point</p>
+        <p>• 50-60% confidence  : 2 points</p>
+        <p>• 60-70% confidence  : 3 points</p>
+        <p>• 70-80% confidence  : 4 points</p>
+        <p>• &gt; 80% confidence: 5 points</p>
+        
+        <p class="tip">💡 Tip: More accurate poses earn more points!</p>
+      </div>
+      <button id="helpOkButton" onclick="closeHelpModal()">Got it!</button>
+    </div>
+  </div>
+
   <!-- 页面主内容 -->
   <div class="start-container">
     <div class="Title">
-      <h1 class="title">Pose Matcher</h1>
+      <h1 class="title">Match The Pose</h1>
     </div>
     <div class="strBtn">
       <button id="startBtn">Start</button>
@@ -47,7 +73,9 @@
     const clickSound = document.getElementById("clickSound");
     const startBtn = document.getElementById("startBtn");
     const musicToggle = document.getElementById("musicToggle");
+    const helpButton = document.getElementById("helpButton");
     const gameOverModal = document.getElementById("gameOverModal");
+    const helpModal = document.getElementById("helpModal");
     const finalScoreElement = document.getElementById("finalScore");
 
     let isPlaying = false;
@@ -61,7 +89,7 @@
       if (gameCompleted === 'true' && finalScore !== null) {
         // Show game over modal with final score
         finalScoreElement.textContent = finalScore;
-        gameOverModal.style.display = 'block';
+        gameOverModal.style.display = 'flex';
         
         // Clean up URL parameters
         window.history.replaceState({}, document.title, window.location.pathname);
@@ -71,6 +99,11 @@
     // Close game over modal
     function closeGameOverModal() {
       gameOverModal.style.display = 'none';
+    }
+
+    // Close help modal
+    function closeHelpModal() {
+      helpModal.style.display = 'none';
     }
 
     // 自动播放背景音乐（若失败，等待用户点击 Start）
@@ -98,6 +131,10 @@
         musicToggle.textContent = "⏸ Pause Music";
       }
       isPlaying = !isPlaying;
+    });
+
+    helpButton.addEventListener("click", () => {
+      helpModal.style.display = 'flex';
     });
 
     startBtn.addEventListener("click", () => {

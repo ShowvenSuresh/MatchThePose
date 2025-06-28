@@ -250,3 +250,28 @@ video {
   transition: color 0.3s ease;
   min-width: 250px;
 }
+
+/* New dedicated status message box */
+.status-message-box {
+  background-color: #1c1f26;
+  border-radius: 12px;
+  padding: 25px 30px;
+  margin: 20px auto 0 auto;
+  width: 900px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-message {
+  font-size: 30px;
+  font-weight: bold;
+  color: white;
+  text-align: center;
+  transition: color 0.3s ease;
+  margin: 0;
+  line-height: 1.4;
+}
