@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Pose Matcher - Game</title>
+  <title>Match The Pose - Game</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles/page2.css') }}">
 </head>
 
@@ -22,7 +22,7 @@
   <div class="main-container">
     <div class="status-box">
       <div class="status-item">⏱ Timer: <span id="timer">5</span></div>
-      <div id="statusMessage" class="status-message-center">Ready to play!</div>
+      <div class="status-item" id="roundDisplay">Round 1/10</div>
       <div class="status-item">💪 Score: <span id="score">0</span></div>
     </div>
 
@@ -34,6 +34,10 @@
       <div class="right-panel">
         <img id="video-stream" src="{{ url_for('video_feed') }}" width="640" height="500">
       </div>
+    </div>
+
+    <div class="status-message-box">
+      <div id="statusMessage" class="status-message">Ready to play!</div>
     </div>
   </div>
 
@@ -47,7 +51,9 @@
       isGameActive: false,
       gameInterval: null,
       checkInterval: null,
-      currentPoseCorrect: false
+      currentPoseCorrect: false,
+      currentScoreToAdd: 0,  // Store the score to add based on confidence
+      currentConfidence: 0   // Store the current confidence percentage
     };
 
     // DOM Elements
@@ -56,6 +62,7 @@
     const mainUI = document.querySelector(".main-container");
     const scoreElement = document.getElementById("score");
     const timerElement = document.getElementById("timer");
+    const roundDisplayElement = document.getElementById("roundDisplay");
     const poseImageElement = document.getElementById("poseImage");
     const statusMessageElement = document.getElementById("statusMessage");
 
@@ -108,11 +115,12 @@
         gameState.score = data.score;
         gameState.currentRound = data.round;
         
-        // Update score display
+        // Update score and round display
         scoreElement.textContent = gameState.score;
+        roundDisplayElement.textContent = `Round ${gameState.currentRound}/10`;
         
         // Reset status message
-        statusMessageElement.textContent = `Round ${gameState.currentRound}/10 - Match the pose!`;
+        statusMessageElement.textContent = `Match the pose!`;
         statusMessageElement.style.color = 'white';
         
       } catch (error) {
@@ -157,15 +165,17 @@
           return;
         }
         
-        // Update the current pose status
+        // Update the current pose status and scoring info
         gameState.currentPoseCorrect = data.correct;
+        gameState.currentScoreToAdd = data.score_to_add || 0;
+        gameState.currentConfidence = data.confidence || 0;
         
-        // Update status message to show detected pose
+        // Update status message to show detected pose and confidence
         if (data.correct) {
-          statusMessageElement.textContent = `Round ${gameState.currentRound}/10 - Perfect! You're matching the pose!`;
+          statusMessageElement.textContent = `Perfect! Confidence: ${gameState.currentConfidence.toFixed(1)}% (${gameState.currentScoreToAdd} pts)`;
           statusMessageElement.style.color = '#4CAF50';
         } else {
-          statusMessageElement.textContent = `Round ${gameState.currentRound}/10 - Detected: ${data.predicted_pose}`;
+          statusMessageElement.textContent = `Detected: ${data.predicted_pose} (${gameState.currentConfidence.toFixed(1)}%)`;
           statusMessageElement.style.color = 'white';
         }
         
@@ -188,14 +198,15 @@
       
       // Check if user had the correct pose when timer ran out
       if (gameState.currentPoseCorrect) {
-        // Award points for having the correct pose at the end
+        // Award points based on confidence level
+        const pointsToAdd = gameState.currentScoreToAdd;
         try {
           const response = await fetch('/add_score', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ points: 5 })
+            body: JSON.stringify({ points: pointsToAdd })
           });
           const data = await response.json();
           gameState.score = data.score;
@@ -203,19 +214,21 @@
         } catch (error) {
           console.error('Error updating score:', error);
           // Fallback: update score locally
-          gameState.score += 5;
+          gameState.score += pointsToAdd;
           scoreElement.textContent = gameState.score;
         }
         
         statusMessageElement.style.color = '#4CAF50';
-        statusMessageElement.textContent = '✅ Perfect timing! You had the right pose! +5 Points';
+        statusMessageElement.textContent = `✅ Perfect timing! Confidence: ${gameState.currentConfidence.toFixed(1)}% (+${pointsToAdd} Points)`;
       } else {
         statusMessageElement.style.color = '#FF6B6B';
-        statusMessageElement.textContent = '⏰ Time\'s up! You need to have the correct pose when time runs out!';
+        statusMessageElement.textContent = '⏰ Time\'s up! You must hold the correct pose!';
       }
       
       // Reset pose state
       gameState.currentPoseCorrect = false;
+      gameState.currentScoreToAdd = 0;
+      gameState.currentConfidence = 0;
       
       // Wait a moment to show result
       setTimeout(async () => {

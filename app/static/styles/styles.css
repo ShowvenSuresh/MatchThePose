@@ -52,6 +52,23 @@ body {
   color: white;
 }
 
+.help-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  padding: 10px 15px;
+  background-color: #433232;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  color: white;
+  width: 45px;
+  height: 45px;
+  font-weight: bold;
+}
+
 /* Modal Styles */
 .modal {
   position: fixed;
@@ -135,5 +152,61 @@ body {
 }
 
 #okButton:active {
+  transform: translateY(0);
+}
+
+/* Help Modal Content Styles */
+.help-content {
+  text-align: left;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.help-content h3 {
+  color: #FFD700;
+  font-size: 1.2em;
+  margin: 15px 0 10px 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.help-content p {
+  color: white;
+  font-size: 1em;
+  margin: 8px 0;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  line-height: 1.4;
+}
+
+.help-content .tip {
+  background: rgba(255, 215, 0, 0.1);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 8px;
+  padding: 10px;
+  margin-top: 15px;
+  font-style: italic;
+  color: #FFD700;
+}
+
+#helpOkButton {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid #ffffff44;
+  padding: 12px 25px;
+  font-size: 1em;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 15px;
+  backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+}
+
+#helpOkButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: #ffffff66;
+  transform: translateY(-1px);
+}
+
+#helpOkButton:active {
   transform: translateY(0);
 }
