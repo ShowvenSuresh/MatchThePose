@@ -16,6 +16,13 @@ class VideoCamera:
         self.matcher = PoseMatcher("app/model/pose_classifier.pkl")
         self.last_prediction = "No pose detected"
         self.last_confidence = 0.0
+        self.expected_pose = None  # Store the current expected pose
+
+    def set_expected_pose(self, expected_pose):
+        """
+        Set the expected pose for comparison
+        """
+        self.expected_pose = expected_pose
 
     def __del__(self):
         self.video.release()
@@ -96,19 +103,19 @@ class VideoCamera:
         y_min = max(0, int(min(y_coords)) - padding)
         y_max = min(h, int(max(y_coords)) + padding)
         
-        # Set a single color for the detection box
-        box_color = (0, 255, 0)  # Green color for all detection boxes
-        
-        """
-        # Choose box color based on confidence level
-        if confidence >= 80:
-            box_color = (0, 255, 0)  # Green for high confidence
-        elif confidence >= 60:
-            box_color = (0, 255, 255)  # Yellow for medium confidence
+        # Determine box color based on pose matching
+        if self.expected_pose and pose_result != "No pose detected":
+            # Normalize pose names for comparison (same logic as in routes.py)
+            predicted_normalized = pose_result.replace('_', ' ').replace('-', ' ').lower().strip()
+            expected_normalized = self.expected_pose.replace('_', ' ').replace('-', ' ').lower().strip()
+            
+            if predicted_normalized == expected_normalized:
+                box_color = (0, 255, 0)  # Green when poses match
+            else:
+                box_color = (0, 255, 255)  # Yellow when poses don't match
         else:
-            box_color = (0, 0, 255)  # Red for low confidence
-        """
-        
+            box_color = (0, 255, 255)  # Yellow when no expected pose is set or no pose detected
+
         # Draw the detection box
         cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), box_color, 2)
         

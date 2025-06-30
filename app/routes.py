@@ -88,6 +88,11 @@ def get_current_pose():
         return jsonify({'game_over': True, 'final_score': session.get('score', 0)})
     
     current_pose = pose_sequence[current_index]
+    
+    # Set the expected pose in the camera for detection box color
+    camera = get_camera()
+    camera.set_expected_pose(current_pose['class'])
+    
     return jsonify({
         'pose_class': current_pose['class'],
         'image_path': current_pose['image'],
@@ -110,6 +115,9 @@ def check_pose():
     # Get the current pose prediction with confidence from camera
     camera = get_camera()
     expected_pose = pose_sequence[current_index]['class']
+    
+    # Set the expected pose in the camera for detection box color
+    camera.set_expected_pose(expected_pose)
     
     # Use the last prediction and confidence from the video feed
     # to avoid conflicts with the ongoing camera stream
