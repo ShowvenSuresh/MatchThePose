@@ -34,12 +34,33 @@
     </div>
   </div>
 
+  <!-- Telegram Setup Modal -->
+  <div id="telegramModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h2>🤖 Telegram Notifications</h2>
+      <div class="telegram-content">
+        <p>Get notifications during your game!</p>
+        <p>📱 Enter your Phone Number:</p>
+        <input type="tel" id="phoneInput" placeholder="+60125463100" class="phone-input">
+        <p class="telegram-note">
+          📝 Enter your Telegram Chat ID:
+        </p>
+        <input type="text" id="chatIdInput" placeholder="Chat ID" class="phone-input">
+        <div class="button-group">
+          <button id="enableTelegramBtn" onclick="setupTelegram()">Enable Notifications</button>
+          <button id="skipTelegramBtn" onclick="skipTelegram()">Skip</button>
+          <button id="backTelegramBtn" onclick="closeTelegramModal()">Back</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Help Modal -->
   <div id="helpModal" class="modal" style="display: none;">
     <div class="modal-content">
       <h2>How to Play</h2>
       <div class="help-content">
-        <h3>Game Instructions:</h3>
+        <h3>Instructions:</h3>
         <p>• Match the pose shown on the left side using your camera</p>
         <p>• Hold the correct pose when the timer reaches 0</p>
         <p>• Complete 10 rounds to finish the game</p>
@@ -75,6 +96,7 @@
     const musicToggle = document.getElementById("musicToggle");
     const helpButton = document.getElementById("helpButton");
     const gameOverModal = document.getElementById("gameOverModal");
+    const telegramModal = document.getElementById("telegramModal");
     const helpModal = document.getElementById("helpModal");
     const finalScoreElement = document.getElementById("finalScore");
 
@@ -104,6 +126,11 @@
     // Close help modal
     function closeHelpModal() {
       helpModal.style.display = 'none';
+    }
+
+    // Close telegram modal
+    function closeTelegramModal() {
+      telegramModal.style.display = 'none';
     }
 
     // 自动播放背景音乐（若失败，等待用户点击 Start）
@@ -138,6 +165,57 @@
     });
 
     startBtn.addEventListener("click", () => {
+      // Show Telegram setup modal first
+      document.getElementById("telegramModal").style.display = 'flex';
+    });
+
+    // Setup Telegram notifications
+    function setupTelegram() {
+      const phoneNumber = document.getElementById("phoneInput").value.trim();
+      const chatId = document.getElementById("chatIdInput").value.trim();
+      
+      if (!phoneNumber) {
+        alert("Please enter your phone number.");
+        return;
+      }
+      
+      // Send setup request to server
+      const setupData = { phone_number: phoneNumber };
+      if (chatId) {
+        setupData.chat_id = chatId;
+      }
+      
+      fetch('/setup_telegram', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(setupData)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById("telegramModal").style.display = 'none';
+          if (!data.notifications_enabled && !chatId) {
+            alert("📱 Phone number saved! To enable instant notifications, please:\n1. Start a chat with your bot\n2. Send /start\n3. Use your Chat ID in future games");
+          }
+          startGame();
+        } else {
+          alert("Error setting up Telegram: " + data.error);
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert("Failed to setup Telegram notifications");
+      });
+    }
+    
+    function skipTelegram() {
+      document.getElementById("telegramModal").style.display = 'none';
+      startGame();
+    }
+    
+    function startGame() {
       clickSound.currentTime = 0;
       clickSound.play().then(() => {
         setTimeout(() => {
@@ -146,7 +224,7 @@
       }).catch(() => {
         window.location.href = "/game";
       });
-    });
+    }
   </script>
 </body>
 

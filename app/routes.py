@@ -4,12 +4,17 @@ import os
 import random
 import json
 from app.utils.camera import VideoCamera
+from app.utils.telegram_bot import TelegramBot
 
 app = Flask(__name__)
 app.secret_key = 'pose-matcher-secret-key-2025'  # Change this to a secure secret key
 
 # Initialize camera globally
 camera = None
+
+# Initialize Telegram bot
+TELEGRAM_TOKEN = "7527324296:AAH12tnGbZi61aTHA0wg6i9uPO8SH3sDLw4"
+telegram_bot = TelegramBot(TELEGRAM_TOKEN)
 
 def get_camera():
     global camera
@@ -203,6 +208,102 @@ def get_pose_prediction():
         'prediction': prediction,
         'confidence': confidence
     })
+
+@app.route('/setup_telegram', methods=['POST'])
+def setup_telegram():
+    """Setup Telegram notifications for the user"""
+    data = request.get_json()
+    phone_number = data.get('phone_number', '').strip()
+    
+    if not phone_number:
+        return jsonify({'success': False, 'error': 'Phone number is required'})
+    
+    # Set up the phone number (for now, we'll just store it in session)
+    session['telegram_phone'] = phone_number
+    telegram_bot.set_phone_number(phone_number)
+    
+    # For demo purposes, we'll assume the user will manually provide their chat_id
+    # In a real implementation, you'd implement proper verification
+    chat_id = data.get('chat_id')  # Optional for testing
+    if chat_id:
+        telegram_bot.set_chat_id(chat_id)
+        session['telegram_enabled'] = True
+        
+        # Send welcome message
+        telegram_bot.send_message(f"🎯 Welcome to Match The Pose! Your Telegram notifications are now enabled. Good luck with your poses! 💪")
+    else:
+        session['telegram_enabled'] = True  # Enable even without chat_id
+        # Send welcome message (will be logged to console if no chat_id)
+        telegram_bot.send_message(f"🎯 Welcome to Match The Pose! Your Telegram notifications are now enabled. Good luck with your poses! 💪")
+    
+    return jsonify({
+        'success': True, 
+        'message': 'Telegram setup completed!',
+        'notifications_enabled': session.get('telegram_enabled', False)
+    })
+
+@app.route('/enable_telegram_notifications', methods=['POST'])
+def enable_telegram_notifications():
+    """Enable Telegram notifications with chat_id"""
+    data = request.get_json()
+    chat_id = data.get('chat_id', '').strip()
+    
+    if not chat_id:
+        return jsonify({'success': False, 'error': 'Chat ID is required'})
+    
+    try:
+        telegram_bot.set_chat_id(int(chat_id))
+        session['telegram_enabled'] = True
+        
+        # Send test message
+        telegram_bot.send_message("🎯 Telegram notifications enabled! You'll receive updates during your Match The Pose game. Good luck! 💪")
+        
+        return jsonify({'success': True, 'message': 'Telegram notifications enabled!'})
+    except ValueError:
+        return jsonify({'success': False, 'error': 'Invalid chat ID format'})
+
+@app.route('/notify_pose_fail', methods=['POST'])
+def notify_pose_fail():
+    """Send Telegram notification when user fails a pose"""
+    # Check if user has set up Telegram (even without chat_id)
+    if not session.get('telegram_phone', None):
+        return jsonify({'success': True, 'message': 'Telegram not set up'})
+    
+    data = request.get_json()
+    pose_name = data.get('pose_name', '')
+    pose_image = data.get('pose_image', '')
+    
+    print(f"🔍 DEBUG: Attempting to send pose failure notification for {pose_name}")
+    
+    if pose_name and pose_image:
+        # Get the full path to the pose image
+        pose_image_path = os.path.join(app.static_folder, pose_image)
+        print(f"🔍 DEBUG: Image path: {pose_image_path}")
+        
+        # Send Telegram notification
+        telegram_bot.send_pose_failure(pose_name, pose_image_path)
+        
+        return jsonify({'success': True, 'message': 'Telegram notification sent'})
+    
+    return jsonify({'success': False, 'error': 'Missing pose information'})
+
+@app.route('/notify_game_end', methods=['POST'])
+def notify_game_end():
+    """Send final score via Telegram when game ends"""
+    # Check if user has set up Telegram (even without chat_id)
+    if not session.get('telegram_phone', None):
+        return jsonify({'success': True, 'message': 'Telegram not set up'})
+    
+    data = request.get_json()
+    final_score = data.get('final_score', session.get('score', 0))
+    total_rounds = session.get('max_rounds', 10)
+    
+    print(f"🔍 DEBUG: Attempting to send final score notification. Score: {final_score}/{total_rounds * 5}")
+    
+    # Send final score notification
+    telegram_bot.send_final_score(final_score, total_rounds)
+    
+    return jsonify({'success': True, 'message': 'Final score sent via Telegram'})
 
 if __name__ == '__main__':
     app.run(debug=True)

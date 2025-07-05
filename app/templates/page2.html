@@ -223,6 +223,10 @@
       } else {
         statusMessageElement.style.color = '#FF6B6B';
         statusMessageElement.textContent = '⏰ Time\'s up! You must hold the correct pose!';
+        
+        // Send Telegram notification for failed pose
+        console.log("🚨 POSE FAILED! Calling sendTelegramPoseFailure()");
+        sendTelegramPoseFailure();
       }
       
       // Reset pose state
@@ -261,8 +265,15 @@
         clearInterval(gameState.checkInterval);
       }
       
-      // Redirect to page 1 with score data
-      window.location.href = `/?gameCompleted=true&finalScore=${finalScore}`;
+      // Send final score via Telegram
+      console.log("🏆 GAME ENDED! Calling sendTelegramGameEnd()");
+      sendTelegramGameEnd(finalScore);
+      
+      // Wait a moment before redirecting to ensure Telegram message is sent
+      setTimeout(() => {
+        // Redirect to page 1 with score data
+        window.location.href = `/?gameCompleted=true&finalScore=${finalScore}`;
+      }, 2000);
     }
 
     // Go back to main menu
@@ -298,6 +309,65 @@
         }
       }
     });
+
+    // Telegram notification functions
+    async function sendTelegramPoseFailure() {
+      console.log("🔍 DEBUG: sendTelegramPoseFailure called");
+      try {
+        const currentPose = await getCurrentPoseInfo();
+        console.log("🔍 DEBUG: Current pose info:", currentPose);
+        
+        if (currentPose && currentPose.pose_class && currentPose.image_path) {
+          console.log(`🔍 DEBUG: Sending failure notification for ${currentPose.pose_class}`);
+          const response = await fetch('/notify_pose_fail', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              pose_name: currentPose.pose_class,
+              pose_image: currentPose.image_path
+            })
+          });
+          const result = await response.json();
+          console.log("🔍 DEBUG: Telegram notification response:", result);
+        } else {
+          console.log("🔍 DEBUG: Missing pose information for Telegram notification");
+        }
+      } catch (error) {
+        console.error('Error sending Telegram pose failure notification:', error);
+      }
+    }
+
+    async function sendTelegramGameEnd(finalScore) {
+      console.log(`🔍 DEBUG: sendTelegramGameEnd called with score: ${finalScore}`);
+      try {
+        const response = await fetch('/notify_game_end', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            final_score: finalScore
+          })
+        });
+        const result = await response.json();
+        console.log("🔍 DEBUG: Game end notification response:", result);
+      } catch (error) {
+        console.error('Error sending Telegram game end notification:', error);
+      }
+    }
+
+    async function getCurrentPoseInfo() {
+      try {
+        const response = await fetch('/get_current_pose');
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error('Error getting current pose info:', error);
+        return null;
+      }
+    }
 
     // Start background music
     window.addEventListener("DOMContentLoaded", () => {
