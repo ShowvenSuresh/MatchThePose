@@ -13,7 +13,7 @@ app.secret_key = 'pose-matcher-secret-key-2025'  # Change this to a secure secre
 camera = None
 
 # Initialize Telegram bot
-TELEGRAM_TOKEN = "7527324296:AAH12tnGbZi61aTHA0wg6i9uPO8SH3sDLw4"
+TELEGRAM_TOKEN = "---"
 telegram_bot = TelegramBot(TELEGRAM_TOKEN)
 
 def get_camera():
