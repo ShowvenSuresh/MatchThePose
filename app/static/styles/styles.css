@@ -210,3 +210,87 @@ body {
 #helpOkButton:active {
   transform: translateY(0);
 }
+
+/* Telegram Modal Styles */
+.telegram-content {
+  text-align: left;
+}
+
+.telegram-content p {
+  margin-bottom: 15px;
+}
+
+.phone-input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0 15px 0;
+  border: 2px solid #ffffff33;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 1em;
+  backdrop-filter: blur(10px);
+}
+
+.phone-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.phone-input:focus {
+  outline: none;
+  border-color: #FFD700;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.telegram-note {
+  font-size: 0.9em;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 20px;
+}
+
+.button-group {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-top: 25px;
+}
+
+.button-group button {
+  padding: 12px 24px;
+  font-size: 1em;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: bold;
+}
+
+#enableTelegramBtn {
+  background: linear-gradient(to right, #4CAF50, #45a049);
+  color: white;
+}
+
+#enableTelegramBtn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+}
+
+#skipTelegramBtn {
+  background: linear-gradient(to right, #757575, #616161);
+  color: white;
+}
+
+#skipTelegramBtn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(117, 117, 117, 0.4);
+}
+
+#backTelegramBtn {
+  background: linear-gradient(to right, #FF7043, #FF5722);
+  color: white;
+}
+
+#backTelegramBtn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(255, 112, 67, 0.4);
+}
