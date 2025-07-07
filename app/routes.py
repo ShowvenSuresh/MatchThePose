@@ -129,8 +129,11 @@ def check_pose():
     current_prediction = getattr(camera, 'last_prediction', 'No pose detected')
     confidence = getattr(camera, 'last_confidence', 0.0)
     
+    # Ensure current_prediction is a string (safety check)
+    current_prediction_str = str(current_prediction)
+    
     # Check if poses match (normalize names for comparison)
-    predicted_normalized = current_prediction.replace('_', ' ').replace('-', ' ').lower().strip()
+    predicted_normalized = current_prediction_str.replace('_', ' ').replace('-', ' ').lower().strip()
     expected_normalized = expected_pose.replace('_', ' ').replace('-', ' ').lower().strip()
     
     is_correct = predicted_normalized == expected_normalized
