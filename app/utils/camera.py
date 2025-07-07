@@ -13,7 +13,7 @@ class VideoCamera:
         self.pose = self.mp_pose.Pose()
         self.mp_drawing = mp.solutions.drawing_utils
 
-        self.matcher = PoseMatcher("app/model/pose_classifier.pkl")
+        self.matcher = PoseMatcher("app/model/logistic_regression_pose_classifier.pkl")
         self.last_prediction = "No pose detected"
         self.last_confidence = 0.0
         self.expected_pose = None  # Store the current expected pose
@@ -105,8 +105,11 @@ class VideoCamera:
         
         # Determine box color based on pose matching
         if self.expected_pose and pose_result != "No pose detected":
+            # Ensure pose_result is a string (safety check)
+            pose_result_str = str(pose_result)
+            
             # Normalize pose names for comparison (same logic as in routes.py)
-            predicted_normalized = pose_result.replace('_', ' ').replace('-', ' ').lower().strip()
+            predicted_normalized = pose_result_str.replace('_', ' ').replace('-', ' ').lower().strip()
             expected_normalized = self.expected_pose.replace('_', ' ').replace('-', ' ').lower().strip()
             
             if predicted_normalized == expected_normalized:
@@ -119,8 +122,11 @@ class VideoCamera:
         # Draw the detection box
         cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), box_color, 2)
         
+        # Ensure pose_result is a string for display (safety check)
+        pose_result_str = str(pose_result)
+        
         # Prepare text for display - combine pose and similarity on same line
-        combined_text = f"Pose: {pose_result} | {confidence:.1f}%"
+        combined_text = f"Pose: {pose_result_str} | {confidence:.1f}%"
         
         # Draw background rectangles for text
         font = cv2.FONT_HERSHEY_SIMPLEX
