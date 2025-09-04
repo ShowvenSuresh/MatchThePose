@@ -24,8 +24,8 @@
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/match-the-pose.git
-   cd match-the-pose
+   git clone https://github.com/ShowvenSuresh/MatchThePose.git
+   cd MatchThePose
    ```
 
 2. **Create a virtual environment and activate it:**
@@ -84,9 +84,6 @@
 └── README.md
 ```
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a pull request or open an issue if you have any suggestions or find any bugs.
 
 ## License
 
