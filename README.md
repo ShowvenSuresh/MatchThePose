@@ -116,19 +116,7 @@ Enable Flow:
 Security Note: Do NOT commit real bot tokens or production secret keys.
 
 ---
-## Adding / Updating Poses
-1. Create a folder under: app/static/poses/<Pose Name>
-2. Add one or more reference images (.jpg/.png)
-3. The game auto-selects random images while enforcing:
-   - No consecutive duplicate pose classes
-   - Max usage per pose = 2 per 10‑round session
-4. To train a new model (not included here):
-   - Collect landmark sequences via MediaPipe
-   - Build feature matrix (flattened (x,y,z,visibility) per landmark)
-   - Train a classifier → export with joblib → replace existing .pkl
-   - Update class_mapping in pose_matcher.py if label indices change
 
----
 ## Key Implementation Details
 - Landmark Filtering: Face landmarks (indices 0–10) are excluded for clarity; only body topology is drawn.
 - Prediction Loop: Video stream thread updates last_prediction + last_confidence; HTTP endpoints consume cached values to avoid contention.
